@@ -85,10 +85,28 @@ async def register_character(ctx, name: str, profession: str, nature: str):
         await ctx.send(f'Invalid nature. Please choose one of the following: {", ".join(pokemon_nature_stats.keys())}.')
         return
 
-    # Proceed with registering the character...
-    # (This part remains unchanged as it handles Discord interactions)
+    # Proceed with registering the character
+    try:
+        # Example structure, modify as per your database schema
+        character_data = {
+            'user_id': user_id,
+            'name': name,
+            'profession': profession,
+            'nature': valid_nature,
+            'ATK': 0,
+            'Sp_ATK': 0,
+            'DEF': 0,
+            'Sp_DEF': 0,
+            'SPE': 0,
+            'level': 1,
+            'stat_points': 5  # Initial stat points to distribute
+        }
 
-# Other commands remain the same, but make sure to replace tokens/URIs similarly.
+        collection.insert_one(character_data)
+        await ctx.send('Character registered successfully!')
+    
+    except Exception as e:
+        await ctx.send(f'Failed to register character: {e}')
 
 # Command to view all available commands and their descriptions
 @bot.command(name='help_menu', help='Display a menu of all available commands and their descriptions.')
