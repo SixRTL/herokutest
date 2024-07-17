@@ -2,20 +2,24 @@ import discord
 from discord.ext import commands
 import pymongo
 import os
+from dotenv import load_dotenv
 
 # Initialize bot and set command prefix
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Load environment variables (for local development)
+load_dotenv()
+
 # MongoDB connection URI with database name specified
-mongo_uri = os.getenv('MONGODB_URI')
+uri = os.getenv('MONGODB_URI')
 
 # Create a MongoDB client and connect to the database
 try:
-    client = pymongo.MongoClient(mongo_uri)
+    client = pymongo.MongoClient(uri)
     db = client.get_database('discord_bot')  # Connect to 'discord_bot' database
     collection = db['characters']  # Collection name for characters
-    
+
     # Send a ping to confirm a successful connection
     client.admin.command('ping')
     print("Pinged your deployment. You successfully connected to MongoDB!")
@@ -29,7 +33,28 @@ pokemon_nature_stats = {
     "Adamant": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "DEF": -1}},
     "Bashful": {"name": "Charisma & Speechcraft", "modifier": {}},
     "Bold": {"name": "Foraging & Perception", "modifier": {"DEF": 2, "ATK": -1}},
-    # Add your existing dictionary entries here...
+    "Brave": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "SPE": -1}},
+    "Calm": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "ATK": -1}},
+    "Careful": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "Sp_ATK": -1}},
+    "Docile": {"name": "Intelligence & Knowledge", "modifier": {}},
+    "Gentle": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "DEF": -1}},
+    "Hardy": {"name": "Foraging & Perception", "modifier": {}},
+    "Hasty": {"name": "Acrobatics & Stealth", "modifier": {"SPE": 2, "DEF": -1}},
+    "Impish": {"name": "Acrobatics & Stealth", "modifier": {"DEF": 2, "Sp_ATK": -1}},
+    "Jolly": {"name": "Acrobatics & Stealth", "modifier": {"SPE": 2, "Sp_ATK": -1}},
+    "Lax": {"name": "Foraging & Perception", "modifier": {"DEF": 2, "Sp_DEF": -1}},
+    "Lonely": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "DEF": -1}},
+    "Mild": {"name": "Intelligence & Knowledge", "modifier": {"Sp_ATK": 2, "DEF": -1}},
+    "Modest": {"name": "Intelligence & Knowledge", "modifier": {"Sp_ATK": 2, "ATK": -1}},
+    "Naive": {"name": "Charisma & Speechcraft", "modifier": {"SPE": 2, "Sp_DEF": -1}},
+    "Naughty": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "Sp_DEF": -1}},
+    "Quiet": {"name": "Charisma & Speechcraft", "modifier": {"Sp_ATK": 2, "SPE": -1}},
+    "Quirky": {"name": "Charisma & Speechcraft", "modifier": {}},
+    "Rash": {"name": "Foraging & Perception", "modifier": {"Sp_ATK": 2, "Sp_DEF": -1}},
+    "Relaxed": {"name": "Acrobatics & Stealth", "modifier": {"DEF": 2, "SPE": -1}},
+    "Sassy": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "SPE": -1}},
+    "Serious": {"name": "Intelligence & Knowledge", "modifier": {}},
+    "Timid": {"name": "Acrobatics & Stealth", "modifier": {"SPE": 2, "ATK": -1}}
 }
 
 # Emoji reactions for stat choices
@@ -39,7 +64,6 @@ emoji_mapping = {
     'DEF': '🛡️',   # Shield for Defense
     'Sp_DEF': '🔒',  # Locked for Special Defense
     'SPE': '⚡'     # Lightning bolt for Speed
-    # Add your existing emoji mapping entries here...
 }
 
 # Command to register a character with reaction-based stat distribution
@@ -144,10 +168,10 @@ async def register_character(ctx, name: str, profession: str, nature: str):
 async def distribute_stats(ctx):
     user_id = str(ctx.author.id)  # Convert user_id to string for MongoDB storage
 
-    # Find the character for the user
+    # Find the character associated with the user
     character = collection.find_one({'user_id': user_id})
     if not character:
-        await ctx.send('You have not registered a character yet.')
+        await ctx.send('You have not registered a character yet. Use `!register` command to register.')
         return
 
     stat_distribution = {
@@ -158,13 +182,15 @@ async def distribute_stats(ctx):
         'SPE': character['SPE']
     }
 
-    stat_points_left = character['stat_points'] + 5  # Additional 5 points to distribute
-    await ctx.send(f"You have {stat_points_left} points left to distribute. React with emojis to allocate points.")
+    stat_points_left = character['stat_points']
 
     def check(reaction, user):
         return user == ctx.author and str(reaction.emoji) in emoji_mapping.values()
 
     message = await ctx.send(f"React with emojis to distribute your stat points. You have {stat_points_left} points left.")
+
+    for emoji in emoji_mapping.values():
+        await message.add_reaction(emoji)
 
     while stat_points_left > 0:
         try:
@@ -210,9 +236,8 @@ async def distribute_stats(ctx):
             await ctx.send('Stat allocation timed out. Please start again.')
             return
 
-    # Update character in MongoDB with new stat distribution and updated stat_points
+    # Update character in MongoDB with new stat distribution
     collection.update_one({'user_id': user_id}, {'$set': {
-        'stat_points': stat_points_left - 5,  # Subtract initial 5 points
         'ATK': stat_distribution['ATK'],
         'Sp_ATK': stat_distribution['Sp_ATK'],
         'DEF': stat_distribution['DEF'],
@@ -220,35 +245,9 @@ async def distribute_stats(ctx):
         'SPE': stat_distribution['SPE']
     }})
 
-    await ctx.send(f'Stat points distributed successfully. Check your character sheet using !character.')
+    await ctx.send(f'Stat points distributed successfully.')
 
-# Command to display registered character info
-@bot.command(name='character', help='Display your registered character information.')
-async def display_character(ctx):
-    user_id = str(ctx.author.id)  # Convert user_id to string for MongoDB storage
-
-    # Find the character for the user
-    character = collection.find_one({'user_id': user_id})
-    if not character:
-        await ctx.send('You have not registered a character yet.')
-        return
-
-    # Display character information
-    character_info = (
-        f"**Name:** {character['name']}\n"
-        f"**Profession:** {character['profession']}\n"
-        f"**Level:** {character['level']}\n"
-        f"**Nature:** {character['nature']} - {pokemon_nature_stats[character['nature']]['name']}\n"
-        f"**Stats:**\n"
-        f"  - ATK: {character['ATK']}\n"
-        f"  - Sp_ATK: {character['Sp_ATK']}\n"
-        f"  - DEF: {character['DEF']}\n"
-        f"  - Sp_DEF: {character['Sp_DEF']}\n"
-        f"  - SPE: {character['SPE']}\n"
-        f"**Stat Points to Distribute:** {character['stat_points']}"
-    )
-
-    await ctx.send(character_info)
+# Other commands and bot setup code...
 
 # Run the bot with the specified token
 bot.run(os.getenv('DISCORD_TOKEN'))
