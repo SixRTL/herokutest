@@ -1,19 +1,18 @@
-import os
 import discord
 from discord.ext import commands
 import pymongo
-import asyncio
+import os
 
 # Initialize bot and set command prefix
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # MongoDB connection URI with database name specified
-mongodb_uri = os.getenv('MONGODB_URI')
+mongo_uri = os.getenv('MONGODB_URI')
 
 # Create a MongoDB client and connect to the database
 try:
-    client = pymongo.MongoClient(mongodb_uri)
+    client = pymongo.MongoClient(mongo_uri)
     db = client.get_database('discord_bot')  # Connect to 'discord_bot' database
     collection = db['characters']  # Collection name for characters
     
@@ -27,131 +26,10 @@ except pymongo.errors.ConnectionFailure:
 
 # Dictionary mapping Pokémon natures to D&D stats
 pokemon_nature_stats = {
-    "Adamant": {
-        "name": "Adamant",
-        "description": "Physical Prowess & Strength",
-        "modifiers": {"ATK": 2, "DEF": -1}
-    },
-    "Bashful": {
-        "name": "Bashful",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {}
-    },
-    "Bold": {
-        "name": "Bold",
-        "description": "Foraging & Perception",
-        "modifiers": {"DEF": 2, "ATK": -1}
-    },
-    "Brave": {
-        "name": "Brave",
-        "description": "Physical Prowess & Strength",
-        "modifiers": {"ATK": 2, "SPE": -1}
-    },
-    "Calm": {
-        "name": "Calm",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {"Sp_DEF": 2, "ATK": -1}
-    },
-    "Careful": {
-        "name": "Careful",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {"Sp_DEF": 2, "Sp_ATK": -1}
-    },
-    "Docile": {
-        "name": "Docile",
-        "description": "Intelligence & Knowledge",
-        "modifiers": {}
-    },
-    "Gentle": {
-        "name": "Gentle",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {"Sp_DEF": 2, "DEF": -1}
-    },
-    "Hardy": {
-        "name": "Hardy",
-        "description": "Foraging & Perception",
-        "modifiers": {}
-    },
-    "Hasty": {
-        "name": "Hasty",
-        "description": "Acrobatics & Stealth",
-        "modifiers": {"SPE": 2, "DEF": -1}
-    },
-    "Impish": {
-        "name": "Impish",
-        "description": "Acrobatics & Stealth",
-        "modifiers": {"DEF": 2, "Sp_ATK": -1}
-    },
-    "Jolly": {
-        "name": "Jolly",
-        "description": "Acrobatics & Stealth",
-        "modifiers": {"SPE": 2, "Sp_ATK": -1}
-    },
-    "Lax": {
-        "name": "Lax",
-        "description": "Foraging & Perception",
-        "modifiers": {"DEF": 2, "Sp_DEF": -1}
-    },
-    "Lonely": {
-        "name": "Lonely",
-        "description": "Physical Prowess & Strength",
-        "modifiers": {"ATK": 2, "DEF": -1}
-    },
-    "Mild": {
-        "name": "Mild",
-        "description": "Intelligence & Knowledge",
-        "modifiers": {"Sp_ATK": 2, "DEF": -1}
-    },
-    "Modest": {
-        "name": "Modest",
-        "description": "Intelligence & Knowledge",
-        "modifiers": {"Sp_ATK": 2, "ATK": -1}
-    },
-    "Naive": {
-        "name": "Naive",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {"SPE": 2, "Sp_DEF": -1}
-    },
-    "Naughty": {
-        "name": "Naughty",
-        "description": "Physical Prowess & Strength",
-        "modifiers": {"ATK": 2, "Sp_DEF": -1}
-    },
-    "Quiet": {
-        "name": "Quiet",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {"Sp_ATK": 2, "SPE": -1}
-    },
-    "Quirky": {
-        "name": "Quirky",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {}
-    },
-    "Rash": {
-        "name": "Rash",
-        "description": "Foraging & Perception",
-        "modifiers": {"Sp_ATK": 2, "Sp_DEF": -1}
-    },
-    "Relaxed": {
-        "name": "Relaxed",
-        "description": "Acrobatics & Stealth",
-        "modifiers": {"DEF": 2, "SPE": -1}
-    },
-    "Sassy": {
-        "name": "Sassy",
-        "description": "Charisma & Speechcraft",
-        "modifiers": {"Sp_DEF": 2, "SPE": -1}
-    },
-    "Serious": {
-        "name": "Serious",
-        "description": "Intelligence & Knowledge",
-        "modifiers": {}
-    },
-    "Timid": {
-        "name": "Timid",
-        "description": "Acrobatics & Stealth",
-        "modifiers": {"SPE": 2, "ATK": -1}
-    }
+    "Adamant": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "DEF": -1}},
+    "Bashful": {"name": "Charisma & Speechcraft", "modifier": {}},
+    "Bold": {"name": "Foraging & Perception", "modifier": {"DEF": 2, "ATK": -1}},
+    # Add your existing dictionary entries here...
 }
 
 # Emoji reactions for stat choices
@@ -161,6 +39,7 @@ emoji_mapping = {
     'DEF': '🛡️',   # Shield for Defense
     'Sp_DEF': '🔒',  # Locked for Special Defense
     'SPE': '⚡'     # Lightning bolt for Speed
+    # Add your existing emoji mapping entries here...
 }
 
 # Command to register a character with reaction-based stat distribution
@@ -175,18 +54,12 @@ async def register_character(ctx, name: str, profession: str, nature: str):
         return
 
     # Check if the provided nature is valid
-    valid_nature = None
-    for valid_name, details in pokemon_nature_stats.items():
-        if nature.lower() == valid_name.lower():
-            valid_nature = valid_name
-            break
-
-    if not valid_nature:
+    if nature.capitalize() not in pokemon_nature_stats:
         await ctx.send(f'Invalid nature. Please choose one of the following: {", ".join(pokemon_nature_stats.keys())}.')
         return
 
-    # Initialize character stats with 5 points distributed based on nature modifiers
-    initial_stats = {
+    # Initial stat distribution menu
+    stat_distribution = {
         'ATK': 0,
         'Sp_ATK': 0,
         'DEF': 0,
@@ -194,59 +67,81 @@ async def register_character(ctx, name: str, profession: str, nature: str):
         'SPE': 0
     }
 
-    modifiers = pokemon_nature_stats[valid_nature]['modifiers']
-    for stat, modifier in modifiers.items():
-        initial_stats[stat] += modifier
+    stat_points_left = 5
 
-    # Insert character into database
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in emoji_mapping.values()
+
+    message = await ctx.send(f"React with emojis to distribute your stat points. You have {stat_points_left} points left.")
+
+    for emoji in emoji_mapping.values():
+        await message.add_reaction(emoji)
+
+    while stat_points_left > 0:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            emoji_str = str(reaction.emoji)
+
+            for stat, emoji in emoji_mapping.items():
+                if emoji == emoji_str:
+                    stat_choice = stat
+
+            # Prompt user for points to allocate
+            await ctx.send(f'How many points do you want to allocate to {stat_choice}? (Remaining points: {stat_points_left})')
+
+            def points_check(m):
+                return m.author == ctx.author and m.channel == ctx.channel and m.content.isdigit()
+
+            try:
+                points_msg = await bot.wait_for('message', timeout=60.0, check=points_check)
+                points = int(points_msg.content)
+
+                if points > stat_points_left or points < 0:
+                    await ctx.send(f'Invalid number of points. You can allocate between 0 and {stat_points_left} points.')
+                    continue
+
+                # Update stat distribution
+                stat_distribution[stat_choice] += points
+                stat_points_left -= points
+
+                # Update reactions to show remaining points
+                for emoji in emoji_mapping.values():
+                    await message.clear_reaction(emoji)
+
+                for stat, emoji in emoji_mapping.items():
+                    await message.add_reaction(emoji)
+
+                await message.edit(content=f"React with emojis to distribute your stat points. You have {stat_points_left} points left.")
+
+            except asyncio.TimeoutError:
+                await ctx.send('Stat allocation timed out. Please start again.')
+                return
+
+        except asyncio.TimeoutError:
+            await ctx.send('Stat allocation timed out. Please start again.')
+            return
+
+    # Insert character into MongoDB with level 5 and stat distribution
     character_data = {
         'user_id': user_id,
         'name': name,
         'profession': profession,
-        'nature': valid_nature,
-        'ATK': initial_stats['ATK'],
-        'Sp_ATK': initial_stats['Sp_ATK'],
-        'DEF': initial_stats['DEF'],
-        'Sp_DEF': initial_stats['Sp_DEF'],
-        'SPE': initial_stats['SPE'],
-        'level': 1,
-        'stat_points': 0  # Additional points to distribute
+        'level': 5,
+        'nature': nature.capitalize(),
+        'stat_points': 0,
+        'ATK': stat_distribution['ATK'],
+        'Sp_ATK': stat_distribution['Sp_ATK'],
+        'DEF': stat_distribution['DEF'],
+        'Sp_DEF': stat_distribution['Sp_DEF'],
+        'SPE': stat_distribution['SPE']
     }
 
     collection.insert_one(character_data)
-    await ctx.send('Character registered successfully!')
+    await ctx.send(f'Character {name} registered successfully with profession {profession} and nature {nature.capitalize()}, associated with {pokemon_nature_stats[nature.capitalize()]["name"]}.')
 
-# Command to view all available commands and their descriptions
-@bot.command(name='help_menu', help='Display a menu of all available commands and their descriptions.')
-async def help_menu(ctx):
-    help_embed = discord.Embed(
-        title='Command Menu',
-        description='Use these commands to interact with the bot:',
-        color=discord.Color.blurple()
-    )
-
-    # Add command descriptions here
-    help_embed.add_field(name='!register <name> <profession> <nature>',
-                         value='Register your character with a Pokémon nature and distribute 5 stat points.',
-                         inline=False)
-    help_embed.add_field(name='!distribute_stats',
-                         value='Distribute additional stat points to your registered character using reactions.',
-                         inline=False)
-    help_embed.add_field(name='!level_up',
-                         value='Manually level up your character and gain a stat point to distribute.',
-                         inline=False)
-    help_embed.add_field(name='!view_character',
-                         value='View details of your registered character.',
-                         inline=False)
-    help_embed.add_field(name='!help_menu',
-                         value='Display a menu of all available commands and their descriptions.',
-                         inline=False)
-
-    await ctx.send(embed=help_embed)
-
-# Command to view character details with exact Pokémon nature and modifiers
-@bot.command(name='view_character', help='View details of your registered character.')
-async def view_character(ctx):
+# Command to distribute additional stat points using reactions
+@bot.command(name='distribute_stats', help='Distribute additional stat points to your registered character using reactions.')
+async def distribute_stats(ctx):
     user_id = str(ctx.author.id)  # Convert user_id to string for MongoDB storage
 
     # Find the character for the user
@@ -255,38 +150,81 @@ async def view_character(ctx):
         await ctx.send('You have not registered a character yet.')
         return
 
-    nature = character['nature']
+    stat_distribution = {
+        'ATK': character['ATK'],
+        'Sp_ATK': character['Sp_ATK'],
+        'DEF': character['DEF'],
+        'Sp_DEF': character['Sp_DEF'],
+        'SPE': character['SPE']
+    }
 
-    # Ensure the nature is a valid key in pokemon_nature_stats
-    if nature not in pokemon_nature_stats:
-        await ctx.send(f"Invalid nature '{nature}'. Please check your character's nature.")
-        return
+    stat_points_left = character['stat_points'] + 5  # Additional 5 points to distribute
+    await ctx.send(f"You have {stat_points_left} points left to distribute. React with emojis to allocate points.")
 
-    nature_details = pokemon_nature_stats[nature]
-    nature_name = nature_details['name']
-    nature_modifiers = nature_details.get('modifiers', {})
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in emoji_mapping.values()
 
-    # Prepare modifiers text in one line
-    modifiers_text = ', '.join([f'{stat}: +{value}' if value > 0 else f'{stat}: {value}' for stat, value in nature_modifiers.items()])
+    message = await ctx.send(f"React with emojis to distribute your stat points. You have {stat_points_left} points left.")
 
-    embed = discord.Embed(
-        title=f'{character["name"]} - {character["profession"]}',
-        description=f'**Nature:** {nature_name}\n\n**Modifiers:** {modifiers_text}\n\n**Stats:**',
-        color=discord.Color.green()
-    )
+    while stat_points_left > 0:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            emoji_str = str(reaction.emoji)
 
-    # Add all stats to the embed
-    embed.add_field(name='ATK', value=character['ATK'], inline=True)
-    embed.add_field(name='Sp_ATK', value=character['Sp_ATK'], inline=True)
-    embed.add_field(name='DEF', value=character['DEF'], inline=True)
-    embed.add_field(name='Sp_DEF', value=character['Sp_DEF'], inline=True)
-    embed.add_field(name='SPE', value=character['SPE'], inline=True)
+            for stat, emoji in emoji_mapping.items():
+                if emoji == emoji_str:
+                    stat_choice = stat
 
-    await ctx.send(embed=embed)
+            # Prompt user for points to allocate
+            await ctx.send(f'How many points do you want to allocate to {stat_choice}? (Remaining points: {stat_points_left})')
 
-# Command to manually level up the character and gain a stat point
-@bot.command(name='level_up', help='Manually level up your character and gain a stat point to distribute.')
-async def level_up(ctx):
+            def points_check(m):
+                return m.author == ctx.author and m.channel == ctx.channel and m.content.isdigit()
+
+            try:
+                points_msg = await bot.wait_for('message', timeout=60.0, check=points_check)
+                points = int(points_msg.content)
+
+                if points > stat_points_left or points < 0:
+                    await ctx.send(f'Invalid number of points. You can allocate between 0 and {stat_points_left} points.')
+                    continue
+
+                # Update stat distribution
+                stat_distribution[stat_choice] += points
+                stat_points_left -= points
+
+                # Update reactions to show remaining points
+                for emoji in emoji_mapping.values():
+                    await message.clear_reaction(emoji)
+
+                for stat, emoji in emoji_mapping.items():
+                    await message.add_reaction(emoji)
+
+                await message.edit(content=f"React with emojis to distribute your stat points. You have {stat_points_left} points left.")
+
+            except asyncio.TimeoutError:
+                await ctx.send('Stat allocation timed out. Please start again.')
+                return
+
+        except asyncio.TimeoutError:
+            await ctx.send('Stat allocation timed out. Please start again.')
+            return
+
+    # Update character in MongoDB with new stat distribution and updated stat_points
+    collection.update_one({'user_id': user_id}, {'$set': {
+        'stat_points': stat_points_left - 5,  # Subtract initial 5 points
+        'ATK': stat_distribution['ATK'],
+        'Sp_ATK': stat_distribution['Sp_ATK'],
+        'DEF': stat_distribution['DEF'],
+        'Sp_DEF': stat_distribution['Sp_DEF'],
+        'SPE': stat_distribution['SPE']
+    }})
+
+    await ctx.send(f'Stat points distributed successfully. Check your character sheet using !character.')
+
+# Command to display registered character info
+@bot.command(name='character', help='Display your registered character information.')
+async def display_character(ctx):
     user_id = str(ctx.author.id)  # Convert user_id to string for MongoDB storage
 
     # Find the character for the user
@@ -295,18 +233,22 @@ async def level_up(ctx):
         await ctx.send('You have not registered a character yet.')
         return
 
-    # Check if character is max level (for illustration purposes, you can customize this logic)
-    if character['level'] >= 100:
-        await ctx.send('Your character is already at maximum level.')
-        return
-
-    # Increment the level and distribute an additional stat point
-    collection.update_one(
-        {'user_id': user_id},
-        {'$inc': {'level': 1, 'stat_points': 1}}
+    # Display character information
+    character_info = (
+        f"**Name:** {character['name']}\n"
+        f"**Profession:** {character['profession']}\n"
+        f"**Level:** {character['level']}\n"
+        f"**Nature:** {character['nature']} - {pokemon_nature_stats[character['nature']]['name']}\n"
+        f"**Stats:**\n"
+        f"  - ATK: {character['ATK']}\n"
+        f"  - Sp_ATK: {character['Sp_ATK']}\n"
+        f"  - DEF: {character['DEF']}\n"
+        f"  - Sp_DEF: {character['Sp_DEF']}\n"
+        f"  - SPE: {character['SPE']}\n"
+        f"**Stat Points to Distribute:** {character['stat_points']}"
     )
-    await ctx.send('Congratulations! Your character has leveled up and gained 1 additional stat point.')
 
-# Run the bot with the specified token from environment variable
-bot_token = os.getenv('DISCORD_TOKEN')
-bot.run(bot_token)
+    await ctx.send(character_info)
+
+# Run the bot with the specified token
+bot.run(os.getenv('TOKEN'))
