@@ -75,11 +75,17 @@ async def register_character(ctx, name: str, profession: str, nature: str):
         return
 
     # Check if the provided nature is valid
-    if nature.capitalize() not in pokemon_nature_stats:
+    valid_nature = None
+    for valid_name in pokemon_nature_stats:
+        if nature.lower() == valid_name.lower():
+            valid_nature = valid_name
+            break
+    
+    if not valid_nature:
         await ctx.send(f'Invalid nature. Please choose one of the following: {", ".join(pokemon_nature_stats.keys())}.')
         return
 
-    # Remaining code for registering character...
+    # Proceed with registering the character...
     # (This part remains unchanged as it handles Discord interactions)
 
 # Other commands remain the same, but make sure to replace tokens/URIs similarly.
