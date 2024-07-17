@@ -1,31 +1,45 @@
 import discord
 from discord.ext import commands
 import pymongo
+import asyncio
 import os
 from dotenv import load_dotenv
+
+# Load environment variables from .env file (only for local development)
+load_dotenv()
 
 # Initialize bot and set command prefix
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Load environment variables (for local development)
-load_dotenv()
-
 # MongoDB connection URI with database name specified
-uri = os.getenv('MONGODB_URI')
+MONGODB_URI = os.getenv('MONGODB_URI')
+
+# Check if the MongoDB URI is set
+if MONGODB_URI is None:
+    print('MONGODB_URI environment variable is not set. Please set it in your .env file.')
+    exit()
 
 # Create a MongoDB client and connect to the database
 try:
-    client = pymongo.MongoClient(uri)
+    client = pymongo.MongoClient(MONGODB_URI)
     db = client.get_database('discord_bot')  # Connect to 'discord_bot' database
     collection = db['characters']  # Collection name for characters
-
+    
     # Send a ping to confirm a successful connection
     client.admin.command('ping')
     print("Pinged your deployment. You successfully connected to MongoDB!")
 
 except pymongo.errors.ConnectionFailure:
     print("Failed to connect to MongoDB. Check your connection URI or MongoDB deployment.")
+    exit()
+
+# Discord bot token
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+
+# Check if the Discord token is set
+if DISCORD_TOKEN is None:
+    print('DISCORD_TOKEN environment variable is not set. Please set it in your .env file.')
     exit()
 
 # Dictionary mapping Pokémon natures to D&D stats
@@ -168,26 +182,18 @@ async def register_character(ctx, name: str, profession: str, nature: str):
 async def distribute_stats(ctx):
     user_id = str(ctx.author.id)  # Convert user_id to string for MongoDB storage
 
-    # Find the character associated with the user
-    character = collection.find_one({'user_id': user_id})
-    if not character:
-        await ctx.send('You have not registered a character yet. Use `!register` command to register.')
+    # Check if the user has registered a character
+    existing_character = collection.find_one({'user_id': user_id})
+    if not existing_character:
+        await ctx.send('You have not registered a character yet. Use !register command to register one.')
         return
 
-    stat_distribution = {
-        'ATK': character['ATK'],
-        'Sp_ATK': character['Sp_ATK'],
-        'DEF': character['DEF'],
-        'Sp_DEF': character['Sp_DEF'],
-        'SPE': character['SPE']
-    }
-
-    stat_points_left = character['stat_points']
+    stat_points_left = existing_character['stat_points']
 
     def check(reaction, user):
         return user == ctx.author and str(reaction.emoji) in emoji_mapping.values()
 
-    message = await ctx.send(f"React with emojis to distribute your stat points. You have {stat_points_left} points left.")
+    message = await ctx.send(f"React with emojis to distribute your {stat_points_left} additional stat points.")
 
     for emoji in emoji_mapping.values():
         await message.add_reaction(emoji)
@@ -215,8 +221,8 @@ async def distribute_stats(ctx):
                     await ctx.send(f'Invalid number of points. You can allocate between 0 and {stat_points_left} points.')
                     continue
 
-                # Update stat distribution
-                stat_distribution[stat_choice] += points
+                # Update character in MongoDB with additional stat points
+                collection.update_one({'user_id': user_id}, {'$inc': {stat_choice: points, 'stat_points': -points}})
                 stat_points_left -= points
 
                 # Update reactions to show remaining points
@@ -226,7 +232,7 @@ async def distribute_stats(ctx):
                 for stat, emoji in emoji_mapping.items():
                     await message.add_reaction(emoji)
 
-                await message.edit(content=f"React with emojis to distribute your stat points. You have {stat_points_left} points left.")
+                await message.edit(content=f"React with emojis to distribute your {stat_points_left} additional stat points.")
 
             except asyncio.TimeoutError:
                 await ctx.send('Stat allocation timed out. Please start again.')
@@ -236,18 +242,7 @@ async def distribute_stats(ctx):
             await ctx.send('Stat allocation timed out. Please start again.')
             return
 
-    # Update character in MongoDB with new stat distribution
-    collection.update_one({'user_id': user_id}, {'$set': {
-        'ATK': stat_distribution['ATK'],
-        'Sp_ATK': stat_distribution['Sp_ATK'],
-        'DEF': stat_distribution['DEF'],
-        'Sp_DEF': stat_distribution['Sp_DEF'],
-        'SPE': stat_distribution['SPE']
-    }})
+    await ctx.send('All additional stat points distributed successfully.')
 
-    await ctx.send(f'Stat points distributed successfully.')
-
-# Other commands and bot setup code...
-
-# Run the bot with the specified token
-bot.run(os.getenv('DISCORD_TOKEN'))
+# Run the bot with the Discord token
+bot.run(DISCORD_TOKEN)
