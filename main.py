@@ -251,4 +251,4 @@ async def display_character(ctx):
     await ctx.send(character_info)
 
 # Run the bot with the specified token
-bot.run(os.getenv('TOKEN'))
+bot.run(os.getenv('DISCORD_TOKEN'))
