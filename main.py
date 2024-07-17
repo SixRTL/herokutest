@@ -27,31 +27,131 @@ except pymongo.errors.ConnectionFailure:
 
 # Dictionary mapping Pokémon natures to D&D stats
 pokemon_nature_stats = {
-    "Adamant": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "DEF": -1}},
-    "Bashful": {"name": "Charisma & Speechcraft", "modifier": {}},
-    "Bold": {"name": "Foraging & Perception", "modifier": {"DEF": 2, "ATK": -1}},
-    "Brave": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "SPE": -1}},
-    "Calm": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "ATK": -1}},
-    "Careful": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "Sp_ATK": -1}},
-    "Docile": {"name": "Intelligence & Knowledge", "modifier": {}},
-    "Gentle": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "DEF": -1}},
-    "Hardy": {"name": "Foraging & Perception", "modifier": {}},
-    "Hasty": {"name": "Acrobatics & Stealth", "modifier": {"SPE": 2, "DEF": -1}},
-    "Impish": {"name": "Acrobatics & Stealth", "modifier": {"DEF": 2, "Sp_ATK": -1}},
-    "Jolly": {"name": "Acrobatics & Stealth", "modifier": {"SPE": 2, "Sp_ATK": -1}},
-    "Lax": {"name": "Foraging & Perception", "modifier": {"DEF": 2, "Sp_DEF": -1}},
-    "Lonely": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "DEF": -1}},
-    "Mild": {"name": "Intelligence & Knowledge", "modifier": {"Sp_ATK": 2, "DEF": -1}},
-    "Modest": {"name": "Intelligence & Knowledge", "modifier": {"Sp_ATK": 2, "ATK": -1}},
-    "Naive": {"name": "Charisma & Speechcraft", "modifier": {"SPE": 2, "Sp_DEF": -1}},
-    "Naughty": {"name": "Physical Prowess & Strength", "modifier": {"ATK": 2, "Sp_DEF": -1}},
-    "Quiet": {"name": "Charisma & Speechcraft", "modifier": {"Sp_ATK": 2, "SPE": -1}},
-    "Quirky": {"name": "Charisma & Speechcraft", "modifier": {}},
-    "Rash": {"name": "Foraging & Perception", "modifier": {"Sp_ATK": 2, "Sp_DEF": -1}},
-    "Relaxed": {"name": "Acrobatics & Stealth", "modifier": {"DEF": 2, "SPE": -1}},
-    "Sassy": {"name": "Charisma & Speechcraft", "modifier": {"Sp_DEF": 2, "SPE": -1}},
-    "Serious": {"name": "Intelligence & Knowledge", "modifier": {}},
-    "Timid": {"name": "Acrobatics & Stealth", "modifier": {"SPE": 2, "ATK": -1}}
+    "Adamant": {
+        "name": "Adamant",
+        "description": "Physical Prowess & Strength",
+        "modifiers": {"ATK": 2, "DEF": -1}
+    },
+    "Bashful": {
+        "name": "Bashful",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {}
+    },
+    "Bold": {
+        "name": "Bold",
+        "description": "Foraging & Perception",
+        "modifiers": {"DEF": 2, "ATK": -1}
+    },
+    "Brave": {
+        "name": "Brave",
+        "description": "Physical Prowess & Strength",
+        "modifiers": {"ATK": 2, "SPE": -1}
+    },
+    "Calm": {
+        "name": "Calm",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {"Sp_DEF": 2, "ATK": -1}
+    },
+    "Careful": {
+        "name": "Careful",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {"Sp_DEF": 2, "Sp_ATK": -1}
+    },
+    "Docile": {
+        "name": "Docile",
+        "description": "Intelligence & Knowledge",
+        "modifiers": {}
+    },
+    "Gentle": {
+        "name": "Gentle",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {"Sp_DEF": 2, "DEF": -1}
+    },
+    "Hardy": {
+        "name": "Hardy",
+        "description": "Foraging & Perception",
+        "modifiers": {}
+    },
+    "Hasty": {
+        "name": "Hasty",
+        "description": "Acrobatics & Stealth",
+        "modifiers": {"SPE": 2, "DEF": -1}
+    },
+    "Impish": {
+        "name": "Impish",
+        "description": "Acrobatics & Stealth",
+        "modifiers": {"DEF": 2, "Sp_ATK": -1}
+    },
+    "Jolly": {
+        "name": "Jolly",
+        "description": "Acrobatics & Stealth",
+        "modifiers": {"SPE": 2, "Sp_ATK": -1}
+    },
+    "Lax": {
+        "name": "Lax",
+        "description": "Foraging & Perception",
+        "modifiers": {"DEF": 2, "Sp_DEF": -1}
+    },
+    "Lonely": {
+        "name": "Lonely",
+        "description": "Physical Prowess & Strength",
+        "modifiers": {"ATK": 2, "DEF": -1}
+    },
+    "Mild": {
+        "name": "Mild",
+        "description": "Intelligence & Knowledge",
+        "modifiers": {"Sp_ATK": 2, "DEF": -1}
+    },
+    "Modest": {
+        "name": "Modest",
+        "description": "Intelligence & Knowledge",
+        "modifiers": {"Sp_ATK": 2, "ATK": -1}
+    },
+    "Naive": {
+        "name": "Naive",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {"SPE": 2, "Sp_DEF": -1}
+    },
+    "Naughty": {
+        "name": "Naughty",
+        "description": "Physical Prowess & Strength",
+        "modifiers": {"ATK": 2, "Sp_DEF": -1}
+    },
+    "Quiet": {
+        "name": "Quiet",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {"Sp_ATK": 2, "SPE": -1}
+    },
+    "Quirky": {
+        "name": "Quirky",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {}
+    },
+    "Rash": {
+        "name": "Rash",
+        "description": "Foraging & Perception",
+        "modifiers": {"Sp_ATK": 2, "Sp_DEF": -1}
+    },
+    "Relaxed": {
+        "name": "Relaxed",
+        "description": "Acrobatics & Stealth",
+        "modifiers": {"DEF": 2, "SPE": -1}
+    },
+    "Sassy": {
+        "name": "Sassy",
+        "description": "Charisma & Speechcraft",
+        "modifiers": {"Sp_DEF": 2, "SPE": -1}
+    },
+    "Serious": {
+        "name": "Serious",
+        "description": "Intelligence & Knowledge",
+        "modifiers": {}
+    },
+    "Timid": {
+        "name": "Timid",
+        "description": "Acrobatics & Stealth",
+        "modifiers": {"SPE": 2, "ATK": -1}
+    }
 }
 
 # Emoji reactions for stat choices
@@ -76,37 +176,45 @@ async def register_character(ctx, name: str, profession: str, nature: str):
 
     # Check if the provided nature is valid
     valid_nature = None
-    for valid_name in pokemon_nature_stats:
+    for valid_name, details in pokemon_nature_stats.items():
         if nature.lower() == valid_name.lower():
             valid_nature = valid_name
             break
-    
+
     if not valid_nature:
         await ctx.send(f'Invalid nature. Please choose one of the following: {", ".join(pokemon_nature_stats.keys())}.')
         return
 
-    # Proceed with registering the character
-    try:
-        # Example structure, modify as per your database schema
-        character_data = {
-            'user_id': user_id,
-            'name': name,
-            'profession': profession,
-            'nature': valid_nature,
-            'ATK': 0,
-            'Sp_ATK': 0,
-            'DEF': 0,
-            'Sp_DEF': 0,
-            'SPE': 0,
-            'level': 1,
-            'stat_points': 5  # Initial stat points to distribute
-        }
+    # Initialize character stats with 5 points distributed based on nature modifiers
+    initial_stats = {
+        'ATK': 0,
+        'Sp_ATK': 0,
+        'DEF': 0,
+        'Sp_DEF': 0,
+        'SPE': 0
+    }
 
-        collection.insert_one(character_data)
-        await ctx.send('Character registered successfully!')
-    
-    except Exception as e:
-        await ctx.send(f'Failed to register character: {e}')
+    modifiers = pokemon_nature_stats[valid_nature]['modifiers']
+    for stat, modifier in modifiers.items():
+        initial_stats[stat] += modifier
+
+    # Insert character into database
+    character_data = {
+        'user_id': user_id,
+        'name': name,
+        'profession': profession,
+        'nature': valid_nature,
+        'ATK': initial_stats['ATK'],
+        'Sp_ATK': initial_stats['Sp_ATK'],
+        'DEF': initial_stats['DEF'],
+        'Sp_DEF': initial_stats['Sp_DEF'],
+        'SPE': initial_stats['SPE'],
+        'level': 1,
+        'stat_points': 0  # Additional points to distribute
+    }
+
+    collection.insert_one(character_data)
+    await ctx.send('Character registered successfully!')
 
 # Command to view all available commands and their descriptions
 @bot.command(name='help_menu', help='Display a menu of all available commands and their descriptions.')
@@ -155,8 +263,8 @@ async def view_character(ctx):
         return
 
     nature_details = pokemon_nature_stats[nature]
-    nature_name = nature
-    nature_modifiers = nature_details.get('modifier', {})
+    nature_name = nature_details['name']
+    nature_modifiers = nature_details.get('modifiers', {})
 
     # Prepare modifiers text in one line
     modifiers_text = ', '.join([f'{stat}: +{value}' if value > 0 else f'{stat}: {value}' for stat, value in nature_modifiers.items()])
